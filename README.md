@@ -90,8 +90,74 @@ Prototype and build IoT systems without setting up servers or developing web sof
 
  
 # PROGRAM:
+```
+#include <WiFi.h>
+
+#include "ThingSpeak.h" // always include thingspeak header file after other header files and custom macros
+#define ldr_pin 34
+char ssid[] = "Surendhar";   // your network SSID (name) 
+char pass[] = "123456789";   // your network password
+int keyIndex = 0;            // your network key Index number (needed only for WEP)
+WiFiClient  client;
+
+unsigned long myChannelNumber =  2487109;
+const int ChannelField = 1;
+const char * myWriteAPIKey = "4TL0XDHT9DBX1YD4";
+
+int ldrValue = 0;       // Variable to store raw analog value
+int lightPercentage = 0;
+
+const int darkValue = 4095; // Analog value in complete darkness
+const int brightValue = 0;  
+
+
+void setup() 
+{
+  Serial.begin(115200);  //Initialize serial
+  pinMode(ldr_pin, INPUT);
+  WiFi.mode(WIFI_STA);   
+  ThingSpeak.begin(client);  // Initialize ThingSpeak
+}
+
+void loop() 
+{
+  // Connect or reconnect to WiFi
+  if(WiFi.status() != WL_CONNECTED)
+{
+    Serial.print("Attempting to connect to SSID: ");
+    
+    while(WiFi.status() != WL_CONNECTED)
+    {
+      WiFi.begin(ssid, pass); 
+      Serial.print(".");
+      delay(5000);     
+    } 
+    Serial.println("\nConnected.");
+  }
+
+  /* LDR sensor */
+  int ldrValue= analogRead(ldr_pin);  
+  
+  lightPercentage = map(ldrValue, darkValue, brightValue, 0, 100);
+
+  // Constrain the percentage to 0-100 range
+  lightPercentage = constrain(lightPercentage, 0, 100);
+  Serial.println("Intensity="); //print on serial monitor using ""
+  Serial.println(lightPercentage);    
+  Serial.println("%");     //display output on serial monitor
+  
+  ThingSpeak.writeField(myChannelNumber, ChannelField, lightPercentage, myWriteAPIKey);
+  delay(5000); 
+}
+```
 # CIRCUIT DIAGRAM:
+
+![image](https://github.com/user-attachments/assets/0c59537e-9316-489a-840a-9b549355d3dc)
+
 # OUTPUT:
+
+![image](https://github.com/user-attachments/assets/ddd8a075-d737-4913-8469-c5eb5e94374d)
+
 # RESULT:
 
 Thus the light intensity values are updated in the Thing speak cloud using ESP32 controller.
